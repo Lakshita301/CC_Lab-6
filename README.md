@@ -1,91 +1,110 @@
-# Automated CI/CD Deployment with Jenkins & NGINX Load Balancing
+# Automated Container Deployment & Load Balancing
 
-This repository contains an automated deployment pipeline built using **Jenkins** and **NGINX** to build, test, and distribute traffic across containerized backend services running inside Docker[cite: 3].
+## Overview
 
-## 📌 Architecture
-Client Request -> NGINX Load Balancer (Port 80) -> backend1 / backend2 (Port 8080)
----
+A containerized CI/CD deployment setup using **Jenkins, Docker, GitHub, and NGINX**.
 
-## 📁 Repository Structure
+Jenkins automates the build and deployment of backend services, while NGINX acts as a reverse proxy and load balancer to distribute incoming requests across multiple backend containers.
 
-CC_LAB-6/
-├── Dockerfile.jenkins  # Custom Jenkins image definition with Docker CLI support
-├── Jenkinsfile        # Declarative CI/CD pipeline definition
-├── backend/           # Web app source code & Dockerfile
-└── nginx/             # Proxy configuration files
-└── default.conf   # Upstream load balancing rules
----
+## Architecture
 
-## 🚀 Setup Instructions
-
-### Task 1: Run Custom Jenkins Container
-Build and start the custom Jenkins instance with mounted Docker daemon socket[cite: 3]:
-```bash
+```text
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ▼
+Docker
+   │
+   ├──► Backend 1
+   │
+   └──► Backend 2
+          │
+          ▼
+       NGINX
+          │
+          ▼
+        Client
+Technologies
+Jenkins – CI/CD automation
+Docker – Containerization
+NGINX – Reverse proxy & load balancing
+GitHub – Source control
+Jenkins Pipeline – Automated deployment
+Features
+Automated Docker image builds through Jenkins
+Parameterized deployment of backend containers
+CI/CD pipeline defined using a Jenkinsfile
+NGINX reverse proxy configuration
+Multiple backend container deployment
+Support for multiple load-balancing strategies:
+Round-Robin
+Least Connections
+IP Hash
+Project Structure
+CC_Lab-6/
+├── backend/
+│   └── Dockerfile
+├── nginx/
+│   └── default.conf
+├── Dockerfile.jenkins
+├── Jenkinsfile
+└── README.md
+Setup
+1. Build Jenkins Image
 docker build -t jenkins-docker -f Dockerfile.jenkins .
-
-docker run -d -p 8080:8080 -p 50000:50000 \
+2. Run Jenkins
+docker run -d \
+  -p 8080:8080 \
+  -p 50000:50000 \
   -v jenkins_home:/var/jenkins_home \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --user root \
-  --name jenkins jenkins-docker
-```[cite: 3]
+  --name jenkins \
+  jenkins-docker
 
-Retrieve initial unlock password[cite: 3]:
-```bash
-docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
-```[cite: 3]
+Jenkins runs at:
 
-Navigate to `http://localhost:8080` to complete setup[cite: 3].
+http://localhost:8080
 
----
+The deployed application is accessible through NGINX at:
 
-### Task 2: Parameterized Pipeline
-1. Create a new Pipeline job in Jenkins named `LAB6-PIPELINE-NGINX`[cite: 3].
-2. Set **Definition** to `Pipeline script from SCM` using Git and point to `CC_LAB-6/Jenkinsfile`[cite: 3].
-3. Run **Build with Parameters** (`Backend_Count = 2`) to dynamically deploy 2 backend containers[cite: 3].
+http://localhost
+Load Balancing
 
----
+NGINX distributes requests between the backend containers using configurable strategies.
 
-### Task 3: Load Balancing Strategies
+Round-Robin
 
-Modify `nginx/default.conf` to test different routing strategies[cite: 3]:
+Requests are distributed sequentially between the available backend instances.
 
-#### 1. Round-Robin (Default)
-Distributes incoming requests sequentially[cite: 3]:
-```nginx
-upstream backend_servers {
-    server backend1:8080;
-    server backend2:8080;
-}
-```[cite: 3]
+Least Connections
 
-#### 2. Least Connections (`least_conn`)
-Forwards requests to the server with fewest active connections[cite: 3]:
-```nginx
-upstream backend_servers {
-    least_conn;
-    server backend1:8080;
-    server backend2:8080;
-}
-```[cite: 3]
+Requests are directed toward the backend with fewer active connections.
 
-#### 3. IP Hash (`ip_hash`)
-Binds client IP to a specific backend for session persistence[cite: 3]:
-```nginx
-upstream backend_servers {
-    ip_hash;
-    server backend1:8080;
-    server backend2:8080;
-}
-```[cite: 3]
+IP Hash
 
-Commit changes to GitHub and trigger **Build Now** in Jenkins to apply configurations automatically[cite: 3].
+Requests from the same client are consistently routed to the same backend instance.
 
----
+CI/CD Workflow
+Code Push
+    │
+    ▼
+GitHub Repository
+    │
+    ▼
+Jenkins Pipeline
+    │
+    ├── Build Backend Image
+    │
+    ├── Deploy Backend Containers
+    │
+    └── Deploy NGINX
+            │
+            ▼
+       Load Balanced
+        Application
+Outcome
 
-## 🔧 Troubleshooting
-
-- **Docker Daemon Permission Errors:**
-  Ensure Jenkins container is run with `--user root` to access `/var/run/docker.sock`[cite: 3].
-- **NGINX 502 Bad Gateway:**
-  Verify backend containers are running (`docker ps`) and ensure a `sleep` delay exists in the `Jenkinsfile` before reloading NGINX configs[cite: 3].
+This project demonstrates a basic containerized CI/CD workflow where source code can be built and deployed automatically through Jenkins, with NGINX providing traffic distribution across multiple backend instances.
