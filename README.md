@@ -7,6 +7,7 @@ Client Request -> NGINX Load Balancer (Port 80) -> backend1 / backend2 (Port 808
 ---
 
 ## 📁 Repository Structure
+
 CC_LAB-6/
 ├── Dockerfile.jenkins  # Custom Jenkins image definition with Docker CLI support
 ├── Jenkinsfile        # Declarative CI/CD pipeline definition
